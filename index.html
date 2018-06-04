@@ -1,0 +1,49 @@
+<html>
+<head>
+  <link href="node_modules/video.js/dist/video-js.css" rel="stylesheet">
+</head>
+
+<body>
+  <video id="my-video" class="video-js" controls preload="auto" width="640" height="264" data-setup="{}">
+    <source src="http://schoolimp-vh.akamaihd.net/i/PD360/media/video/PD360/2205/2205_PD_getacquainted/2205_PD_getacquainted_,304,800,1152,1952,.mp4.csmil/master.m3u8" type='application/x-mpegURL'>
+    <p class="vjs-no-js">
+      To view this video please enable JavaScript, and consider upgrading to a web browser that
+      <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+    </p>
+  </video>
+  <script src="node_modules/video.js/dist/video.js"></script>
+  <script>
+    // START - USER INTERACTION
+    var player = videojs('my-video');
+    //reset every new video
+    var sliceTracker = new Array(10).fill(false);
+
+    function callBackend (percent, totalDuration, sliceDuration) {
+      console.log(`${percent} of ${totalDuration}s triggered every ${sliceDuration}s.`)
+    }
+    // END - USER INTERACTION
+
+    function sliceDuration (p, tpt, st, fn) {
+      var duration = p.duration();
+      if(duration) {
+        duration = duration / 10;
+        var slices = new Array(10).fill().forEach(function (i, j) {
+          if (j === 9 && tpt === p.duration() || !st[j] && tpt > duration * (j + 1)) {
+            fn((10*(j+1)) + '%', p.duration(), duration);
+            st[j] = true;
+          }
+        });
+      }
+    }
+
+    player.on('timeupdate', function (data) {
+      var ranges = player.played();
+      var totalPlayTime = (new Array(ranges.length).fill()).reduce(function (i, j, k) {
+        return i + ranges.end(k) - ranges.start(k);
+      }, 0);
+
+      sliceDuration(player, totalPlayTime, sliceTracker, callBackend);
+    });
+  </script>
+</body>
+</html>
